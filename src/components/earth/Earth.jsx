@@ -1,18 +1,8 @@
-import { DoubleSide, TextureLoader } from "three";
+import { TextureLoader } from "three";
 import { useLoader, useFrame } from "@react-three/fiber";
-import seaVertexShader from '../../shaders/sea/vertex.glsl';
-import seaFragmentShader from '../../shaders/sea/fragment.glsl';
 import { useRef } from "react";
 import earthVertex from '../../shaders/earth/vertex.glsl';
 import earthFragment from '../../shaders/earth/fragment.glsl';
-import countriesData from '../../assets/countries.json';
-
-const countries = countriesData.features.reduce((acc, cur) => {
-  acc[cur.properties.NAME] = cur.geometry.coordinates;
-  return acc;
-}, {});
-
-console.log(countries);
 
 const segs = 801; // It makes a bug with 2n number
 
@@ -26,6 +16,7 @@ function Earth() {
   const waterNormalC = useLoader(TextureLoader, './wave-c.png');
   const lakesMap = useLoader(TextureLoader, './lakes.jpg');
   const earthBWMap = useLoader(TextureLoader, './earthbw.png');
+  const landDistanceMap = useLoader(TextureLoader, './land-distance.png');
 
   useFrame((_, delta) => {
     if (earthMaterial.current) {
@@ -50,7 +41,8 @@ function Earth() {
             waterNormalB: {value: waterNormalB},
             waterNormalC: {value: waterNormalC},
             lakesMap: {value: lakesMap},
-            earthBWMap: {value: earthBWMap}
+            earthBWMap: {value: earthBWMap},
+            landDistanceMap: {value: landDistanceMap}
           }}
         />
       </mesh>

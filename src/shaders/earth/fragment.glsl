@@ -4,6 +4,7 @@ uniform sampler2D waterNormalA;
 uniform sampler2D waterNormalB;
 uniform sampler2D waterNormalC;
 uniform sampler2D landDistanceMap;
+uniform sampler2D countriesColorsMap;
 uniform float uTime;
 
 varying vec3 vPosition;
@@ -44,146 +45,6 @@ vec3 hsv2rgb(vec3 c)
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-// The MIT License
-// Copyright © 2013 Inigo Quilez
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-// https://www.youtube.com/c/InigoQuilez
-// https://iquilezles.org/
-//
-// https://www.shadertoy.com/view/Xsl3Dl
-vec3 hash( vec3 p ) // replace this by something better
-{
-	p = vec3( dot(p,vec3(127.1,311.7, 74.7)),
-            dot(p,vec3(269.5,183.3,246.1)),
-            dot(p,vec3(113.5,271.9,124.6)));
-
-	return -1.0 + 2.0*fract(sin(p)*43758.5453123);
-}
-
-float noise( in vec3 p )
-{
-  vec3 i = floor( p );
-  vec3 f = fract( p );
-	
-	vec3 u = f*f*(3.0-2.0*f);
-
-  return mix( mix( mix( dot( hash( i + vec3(0.0,0.0,0.0) ), f - vec3(0.0,0.0,0.0) ), 
-                        dot( hash( i + vec3(1.0,0.0,0.0) ), f - vec3(1.0,0.0,0.0) ), u.x),
-                   mix( dot( hash( i + vec3(0.0,1.0,0.0) ), f - vec3(0.0,1.0,0.0) ), 
-                        dot( hash( i + vec3(1.0,1.0,0.0) ), f - vec3(1.0,1.0,0.0) ), u.x), u.y),
-              mix( mix( dot( hash( i + vec3(0.0,0.0,1.0) ), f - vec3(0.0,0.0,1.0) ), 
-                        dot( hash( i + vec3(1.0,0.0,1.0) ), f - vec3(1.0,0.0,1.0) ), u.x),
-                   mix( dot( hash( i + vec3(0.0,1.0,1.0) ), f - vec3(0.0,1.0,1.0) ), 
-                        dot( hash( i + vec3(1.0,1.0,1.0) ), f - vec3(1.0,1.0,1.0) ), u.x), u.y), u.z );
-}
-
-float fbm(vec3 p, int octaves, float persistence, float lacunarity) {
-  float amplitude = 0.5;
-  float frequency = 1.0;
-  float total = 0.0;
-  float normalization = 0.0;
-
-  for (int i = 0; i < octaves; ++i) {
-    float noiseValue = noise(p * frequency);
-    total += noiseValue * amplitude;
-    normalization += amplitude;
-    amplitude *= persistence;
-    frequency *= lacunarity;
-  }
-
-  total /= normalization;
-
-  return total;
-}
-
-float ridgedFBM(vec3 p, int octaves, float persistence, float lacunarity) {
-  float amplitude = 0.5;
-  float frequency = 1.0;
-  float total = 0.0;
-  float normalization = 0.0;
-
-  for (int i = 0; i < octaves; ++i) {
-    float noiseValue = noise(p * frequency);
-    noiseValue = abs(noiseValue);
-    noiseValue = 1.0 - noiseValue;
-
-    total += noiseValue * amplitude;
-    normalization += amplitude;
-    amplitude *= persistence;
-    frequency *= lacunarity;
-  }
-
-  total /= normalization;
-  total *= total;
-
-  return total;
-}
-
-float turbulenceFBM(vec3 p, int octaves, float persistence, float lacunarity) {
-  float amplitude = 0.5;
-  float frequency = 1.0;
-  float total = 0.0;
-  float normalization = 0.0;
-
-  for (int i = 0; i < octaves; ++i) {
-    float noiseValue = noise(p * frequency);
-    noiseValue = abs(noiseValue);
-
-    total += noiseValue * amplitude;
-    normalization += amplitude;
-    amplitude *= persistence;
-    frequency *= lacunarity;
-  }
-
-  total /= normalization;
-
-  return total;
-}
-
-float cellular(vec3 coords) {
-  vec2 gridBasePosition = floor(coords.xy);
-  vec2 gridCoordOffset = fract(coords.xy);
-
-  float closest = 1.0;
-  for (float y = -2.0; y <= 2.0; y += 1.0) {
-    for (float x = -2.0; x <= 2.0; x += 1.0) {
-      vec2 neighbourCellPosition = vec2(x, y);
-      vec2 cellWorldPosition = gridBasePosition + neighbourCellPosition;
-      vec2 cellOffset = vec2(
-        noise(vec3(cellWorldPosition, coords.z) + vec3(243.432, 324.235, 0.0)),
-        noise(vec3(cellWorldPosition, coords.z))
-      );
-
-      float distToNeighbour = length(
-          neighbourCellPosition + cellOffset - gridCoordOffset);
-      closest = min(closest, distToNeighbour);
-    }
-  }
-
-  return closest;
-}
-
-float stepped(float noiseSample) {
-  float steppedSample = floor(noiseSample * 10.0) / 10.0;
-  float remainder = fract(noiseSample * 10.0);
-  steppedSample = (steppedSample - remainder) * 0.5 + 0.5;
-  return steppedSample;
-}
-
-float domainWarpingFBM(vec3 coords) {
-  vec3 offset = vec3(
-    fbm(coords, 4, 0.5, 2.0),
-    fbm(coords + vec3(43.235, 23.112, 0.0), 4, 0.5, 2.0), 0.0);
-  float noiseSample = fbm(coords + offset, 1, 0.5, 2.0);
-
-  vec3 offset2 = vec3(
-    fbm(coords + 4.0 * offset + vec3(5.325, 1.421, 3.235), 4, 0.5, 2.0),
-    fbm(coords + 4.0 * offset + vec3(4.32, 0.532, 6.324), 4, 0.5, 2.0), 0.0);
-  noiseSample = fbm(coords + 4.0 * offset2, 1, 0.5, 2.0);
-
-  return noiseSample;
 }
 
 //	Classic Perlin 3D Noise 
@@ -270,19 +131,28 @@ float cnoise(vec3 P) {
 
 void main()
 {
+    vec2 flightCoords = vec2(0.64, 0.82);
     float isUnderSeaLevel = step(0.5, vDispValue);
+    vec3 color = texture2D(textureMap, vUv).rgb;
+
+    // calcualate normals
 	vec3 fdx = dFdx(vPosition);
 	vec3 fdy = dFdy(vPosition);
 	vec3 normal = normalize(cross(fdx, fdy));
     
+    // add normalmaps for sea
     vec3 waveA = texture2D(waterNormalA, fract((vUv + uTime * 0.001) * 100.0)).rgb;
     vec3 waveB = texture2D(waterNormalB, fract((vUv + uTime * 0.0001) * 200.0)).rgb;
     vec3 waveC = texture2D(waterNormalC, fract(vec2(vUv.x - uTime * 0.0002, vUv.y + uTime * 0.0005) * 400.0)).rgb;
-
     normal = normalize(mix(normal - ((waveA - waveB) - (waveC - waveB)), normal, isUnderSeaLevel));
 
-    vec3 color = texture2D(textureMap, vUv).rgb;
-    vec3 ld = texture2D(landDistanceMap, vUv).rgb;
+    // Make a current country brighter (in fact we are doing other countries darker)
+    vec3 coordCountry = texture2D(countriesColorsMap, flightCoords).rgb;
+    vec3 currentCountry = texture2D(countriesColorsMap, vUv).rgb;
+    float colorMultiplier = mix(1.0, 0.2, step(0.0000001, distance(coordCountry, currentCountry)));
+    color *= colorMultiplier;
+
+    // Make colors more saturated
     color = rgb2hsv(color);
     color.y = min(1.0, color.y + color.y * 0.7);
     color.z = min(1.0, color.z + 0.1);
@@ -291,24 +161,20 @@ void main()
     float seaLevel = smoothstep(0.38, 0.5, vDispValue);
     seaColor = mix(seaColor, vec3(0.1, 0.5, 1.0), seaLevel);
 
-    // Perlin noise
+    // Waves from shores
+    vec3 ld = texture2D(landDistanceMap, vUv).rgb;
     float strength = cnoise(ld * 100.0 - uTime * 0.3);
     strength *= cnoise(vec3(vUv * 100.0, uTime * 0.1)) * 2.0;
     strength = clamp(strength, 0.0, 1.0);
-    // Outer glow
-    // float outerGlow = distance(vUv, vec2(0.5)) * 5.0 - 1.5;
-    // Apply cool step
-    // strength = step(-0.2, strength + outerGlow);
-
     seaColor = mix(seaColor, seaColor + vec3(strength), smoothstep(0.98, 1.0, 1.0 - ld));
     // seaColor = vec3(strength);
-    
 
     color = mix(seaColor, color, isUnderSeaLevel);
 
+    // Lights
     vec3 lighting = vec3(0.0);
     // Ambient light
-    vec3 ambient = vec3(0.01);
+    vec3 ambient = vec3(0.03);
 
     // Hemi light
     vec3 sunColor = vec3(0.5, 0.5, 0.5);
@@ -317,7 +183,7 @@ void main()
     vec3 hemi = mix(moonColor, sunColor, hemiMix);
 
     // Directional light
-    vec3 lightDir = normalize(vec3(1.0, 0.2, 1.0)) + 0.5;
+    vec3 lightDir = normalize(vec3(sin(uTime * 0.5), 0.2, cos(uTime * 0.5))) * 3.0;
     vec3 lightColor = vec3(1.0, 1.0, 0.9);
     float dp = max(0.0, dot(lightDir, normal));
     vec3 diffuse = dp * lightColor;
@@ -342,6 +208,5 @@ void main()
     vec3 finalColor = color * lighting + cityLight + specular;
     finalColor = linearTosRGB(finalColor);
     // finalColor = pow(finalColor, vec3(1.0 / 2.2));
-
-    gl_FragColor = vec4( finalColor, 1.0 );
+    gl_FragColor = vec4(finalColor, 1.0);
 }

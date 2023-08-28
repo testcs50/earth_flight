@@ -45,8 +45,8 @@ void main()
 {
     vec3 pos = position * 2.0;
     boxVerticeToSphere(pos);
-
     vec2 uv = pointOnSphereToUV(pos);
+
     float isGround = texture2D(earthBWMap, uv).r;
     float isLake = texture2D(lakesMap, uv).r;
     
@@ -69,8 +69,8 @@ void main()
     vec4 projectedPosition = projectionMatrix * viewPosition;
 
     vPosition = modelPosition.xyz;
-    vDispValue = mix(min(0.4999, dispValue), max(0.5001, dispValue), isGround - isLake);;
     vUv = uv;
+    vDispValue = mix(min(0.4999, dispValue), max(0.5001, dispValue), isGround - isLake);
 
     gl_Position = projectedPosition;
 }

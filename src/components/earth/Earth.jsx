@@ -17,6 +17,7 @@ function Earth() {
   const lakesMap = useLoader(TextureLoader, './lakes.jpg');
   const earthBWMap = useLoader(TextureLoader, './earthbw.png');
   const landDistanceMap = useLoader(TextureLoader, './land-distance.png');
+  const countriesColorsMap = useLoader(TextureLoader, './countries-colored.png');
 
   useFrame((_, delta) => {
     if (earthMaterial.current) {
@@ -42,7 +43,8 @@ function Earth() {
             waterNormalC: {value: waterNormalC},
             lakesMap: {value: lakesMap},
             earthBWMap: {value: earthBWMap},
-            landDistanceMap: {value: landDistanceMap}
+            landDistanceMap: {value: landDistanceMap},
+            countriesColorsMap: {value: countriesColorsMap}
           }}
         />
       </mesh>

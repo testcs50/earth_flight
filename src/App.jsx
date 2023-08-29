@@ -3,6 +3,7 @@ import { OrbitControls, Sky } from "@react-three/drei";
 import { Perf } from "r3f-perf";
 import Earth from "./components/earth/Earth";
 import "./App.css";
+import Custom from "./components/Custom";
 
 function App() {
 
@@ -15,7 +16,8 @@ function App() {
     <OrbitControls makeDefault />
     {/* <Sky /> */}
 
-    <Earth />
+    {/* <Earth /> */}
+    <Custom />
 
     <ambientLight intensity={1.2} />
     <directionalLight position={[4, 5, 6]} />

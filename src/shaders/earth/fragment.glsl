@@ -6,6 +6,7 @@ uniform sampler2D waterNormalC;
 uniform sampler2D landDistanceMap;
 uniform sampler2D countriesColorsMap;
 uniform float uTime;
+uniform vec2 uFlightCoord;
 
 varying vec3 vPosition;
 varying float vDispValue;
@@ -131,7 +132,7 @@ float cnoise(vec3 P) {
 
 void main()
 {
-    vec2 flightCoords = vec2(0.64, 0.82);
+    // vec2 flightCoords = vec2(0.64, 0.82);
     float isUnderSeaLevel = step(0.5, vDispValue);
     vec3 color = texture2D(textureMap, vUv).rgb;
 
@@ -147,7 +148,7 @@ void main()
     normal = normalize(mix(normal - ((waveA - waveB) - (waveC - waveB)), normal, isUnderSeaLevel));
 
     // Make a current country brighter (in fact we are doing other countries darker)
-    vec3 coordCountry = texture2D(countriesColorsMap, flightCoords).rgb;
+    vec3 coordCountry = texture2D(countriesColorsMap, uFlightCoord).rgb;
     vec3 currentCountry = texture2D(countriesColorsMap, vUv).rgb;
     float colorMultiplier = mix(1.0, 0.2, step(0.0000001, distance(coordCountry, currentCountry)));
     color *= colorMultiplier;
@@ -183,7 +184,7 @@ void main()
     vec3 hemi = mix(moonColor, sunColor, hemiMix);
 
     // Directional light
-    vec3 lightDir = normalize(vec3(sin(uTime * 0.5), 0.2, cos(uTime * 0.5))) * 3.0;
+    vec3 lightDir = normalize(vec3(sin(uTime * 0.1), 0.2, cos(uTime * 0.1))) * 3.0;
     vec3 lightColor = vec3(1.0, 1.0, 0.9);
     float dp = max(0.0, dot(lightDir, normal));
     vec3 diffuse = dp * lightColor;

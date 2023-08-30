@@ -16,8 +16,8 @@ function App() {
     <OrbitControls makeDefault />
     {/* <Sky /> */}
 
-    {/* <Earth /> */}
-    <Custom />
+    <Earth />
+    {/* <Custom /> */}
 
     <ambientLight intensity={1.2} />
     <directionalLight position={[4, 5, 6]} />

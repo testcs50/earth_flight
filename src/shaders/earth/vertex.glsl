@@ -43,7 +43,7 @@ vec2 pointOnSphereToUV(vec3 p) {
 
 void main()
 {
-    vec3 pos = position;
+    vec3 pos = position * 2.0;
     boxVerticeToSphere(pos);
     vec2 uv = pointOnSphereToUV(pos);
 
@@ -52,8 +52,8 @@ void main()
     
     float dispValue = 0.0;
     float texQua = 0.0;
-    float texStep = 0.0005;
-    float blendSize = 3.0;
+    float texStep = 0.00035;
+    float blendSize = 1.0;
     for (float i = 0.0 - blendSize; i <= blendSize; i += 1.0) {
         for (float j = 0.0 - blendSize; j <= blendSize; j += 1.0) {
             dispValue += texture2D(displacementMap, vec2(uv.x + j * texStep, uv.y + i * texStep)).r;

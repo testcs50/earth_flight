@@ -1,9 +1,8 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Sky } from "@react-three/drei";
+import { OrbitControls, KeyboardControls } from "@react-three/drei";
 import { Perf } from "r3f-perf";
 import Earth from "./components/earth/Earth";
 import "./App.css";
-import Custom from "./components/Custom";
 
 function App() {
 
@@ -14,10 +13,14 @@ function App() {
     <Perf position="top-left" />
 
     <OrbitControls makeDefault />
-    {/* <Sky /> */}
-
-    <Earth />
-    {/* <Custom /> */}
+    <KeyboardControls
+      map={[
+        { name: 'left', keys: [ 'ArrowLeft', 'KeyA' ] },
+        { name: 'right', keys: [ 'ArrowRight', 'KeyD' ] },
+      ]}
+    >
+      <Earth />
+    </KeyboardControls>
 
     <ambientLight intensity={1.2} />
     <directionalLight position={[4, 5, 6]} />

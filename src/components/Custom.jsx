@@ -1,18 +1,16 @@
 import { useFrame } from '@react-three/fiber';
 import React, { useEffect, useRef, useState } from 'react';
-import { PlaneGeometry, Vector3, Matrix4 } from 'three';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js'
-import { generateCubePoints } from '../utils/generateCubePoints';
-import { CUBE_WIDTH, PLANE_SEGMENTS, SEGMENTS } from '../consts';
+import { Vector3 } from 'three';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {generateGeometries} from '../utils/generateGeometries';
+import {generateCubePoints} from '../utils/generateCubePoints';
 
-const points = generateCubePoints();
-
-const g = new PlaneGeometry(CUBE_WIDTH / SEGMENTS, CUBE_WIDTH / SEGMENTS, PLANE_SEGMENTS, PLANE_SEGMENTS);
+const points = generateGeometries(generateCubePoints());
 
 const Custom = () => {
 
-    const [pointsState, setPointsState] = useState(points);
-    const [mergedGeometry, setMergedGeometry] = useState(null);
+  const [mergedGeometry, setMergedGeometry] = useState(null);
+  const [planes, setPlanes] = useState([]);
 
     const flightCoord = useRef(new Vector3(0, 0, 1.5));
     const flightRef = useRef(null);
@@ -28,28 +26,36 @@ const Custom = () => {
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            const newPoints = points.filter((p) => p.p.distanceTo(flightCoord.current) < 0.5);
-            const geoms = newPoints.map(({point, rotateX, rotateY}) => {
-                const geom = g.clone();
-                const translationMatrix = new Matrix4().makeTranslation(point);
-                geom.applyMatrix4(translationMatrix);
-
-                if (rotateX) {
-                    const rotationMatrix = new Matrix4().makeRotationX(rotateX);
-                    geom.applyMatrix4(rotationMatrix);
-                }
-                if (rotateY) {
-                    const rotationMatrix = new Matrix4().makeRotationY(rotateY);
-                    geom.applyMatrix4(rotationMatrix);
-                }
-                return geom;
-            });
-            const mergedGeoms = BufferGeometryUtils.mergeGeometries(geoms);
-            setPointsState(newPoints);
-            setMergedGeometry(mergedGeoms);
-        }, 800);
-        return () => clearInterval(intervalId);
+        const flightCoordCopy = flightCoord.current.clone().normalize();
+        const geoms = [];
+        for (const point of points) {
+            const dist = point.p.distanceTo(flightCoordCopy);
+            if (dist < 0.4) {
+            geoms.push(point.bigGeom);
+            }
+            if (dist > 0.35 && dist < 0.8) {
+            geoms.push(point.smallGeom);
+            }
+        }
+        setPlanes(geoms);
+        }, 500);
+        return () => {
+        clearInterval(intervalId);
+        };
     }, []);
+
+    useEffect(() => {
+        const callbackId = requestIdleCallback(() => {
+        if (planes.length) {
+            let mergedGeoms = BufferGeometryUtils.mergeGeometries(planes);
+            setMergedGeometry(mergedGeoms);
+        }
+        });
+        return () => {
+        if (mergedGeometry?.dispose) mergedGeometry.dispose();
+        cancelIdleCallback(callbackId);
+        }
+    }, [planes]);
 
     return (
         <>
@@ -72,7 +78,7 @@ const Custom = () => {
                 side={THREE.DoubleSide}
             /> */}
             
-            {/* {pointsState.map((p, i) => (
+            {/* {points.map((p, i) => (
                 <mesh key={Math.random()} scale={0.03} position={p.p} >
                     <sphereGeometry/>
                     <meshBasicMaterial color="white" />

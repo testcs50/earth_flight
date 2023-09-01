@@ -1,14 +1,10 @@
-import { Vector3, TextureLoader, ShaderMaterial, Vector2 } from 'three';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { Vector3, TextureLoader, ShaderMaterial, Vector2, Matrix4 } from 'three';
 import { useLoader, useFrame } from "@react-three/fiber";
-import { useRef, useState, useEffect } from "react";
+import { useKeyboardControls } from '@react-three/drei';
+import { useRef, useEffect } from "react";
 import earthVertex from '../../shaders/earth/vertex.glsl';
 import earthFragment from '../../shaders/earth/fragment.glsl';
-import { generateCubePoints } from "../../utils/generateCubePoints";
 import { pointOnSphereToUV } from '../../utils/pointOnSphereToUV';
-import { generateGeometries } from '../../utils/generateGeometries';
-
-const points = generateGeometries(generateCubePoints());
 
 const earthMaterial = new ShaderMaterial({
   vertexShader: earthVertex,
@@ -30,9 +26,9 @@ const earthMaterial = new ShaderMaterial({
 })
 
 function Earth() {
-  // const [earthMaterial, setEarthMaterialRef] = useState();
   const displacementMap = useLoader(TextureLoader, './displacement.jpg');
-  const textureMap = useLoader(TextureLoader, './colored.jpg');
+  // const textureMap = useLoader(TextureLoader, './colored.jpg');
+  const textureMap = useLoader(TextureLoader, './colored-borders.jpg');
   const lightMap = useLoader(TextureLoader, './lightMap.png');
   const waterNormalA = useLoader(TextureLoader, './wave-a.png');
   const waterNormalB = useLoader(TextureLoader, './wave-b.png');
@@ -42,19 +38,32 @@ function Earth() {
   const landDistanceMap = useLoader(TextureLoader, './land-distance.png');
   const countriesColorsMap = useLoader(TextureLoader, './countries-colored.png');
 
-  const [mergedGeometry, setMergedGeometry] = useState(null);
-  const [planes, setPlanes] = useState([]);
-  const flightCoord = useRef(new Vector3(0, 0, 1.5));
+  const flightCoord = useRef(new Vector3(0, 0, 1).multiplyScalar(2.15));
+  const matrix = useRef(new Matrix4());
+  const basisY = useRef(new Vector3(0, 1, 0));
+  const basisZ = useRef(new Vector3(0, 0, 1));
   const flightRef = useRef(null);
 
-  useFrame((state) => {
+  const [_, getKeys] = useKeyboardControls();
+
+  useFrame((state, delta) => {
     earthMaterial.uniforms.uTime.value = state.clock.elapsedTime;
-    if (flightCoord.current && flightRef.current) {
-        const time = state.clock.elapsedTime * 0.05;
-        flightCoord.current.setX(Math.sin(time) * 2.15);
-        flightCoord.current.setZ(Math.cos(time) * 2.15);
-        flightRef.current.position.copy(flightCoord.current);
-        earthMaterial.uniforms.uFlightCoord.value = pointOnSphereToUV(flightCoord.current);
+    const { left, right } = getKeys();
+    if (left) {
+      matrix.current.makeRotationAxis(basisZ.current.normalize(), delta * 2);
+      basisY.current.applyMatrix4(matrix.current);
+    }
+    if (right) {
+      matrix.current.makeRotationAxis(basisZ.current.normalize(), -delta * 2);
+      basisY.current.applyMatrix4(matrix.current);
+    }
+    if (flightRef.current) {
+      matrix.current.makeRotationAxis(basisY.current.normalize(), delta / 15);
+      basisZ.current.applyMatrix4(matrix.current);
+      flightCoord.current.applyMatrix4(matrix.current);
+      flightRef.current.position.copy(flightCoord.current);
+      state.camera.position.copy(flightCoord.current).multiplyScalar(1.35);
+      earthMaterial.uniforms.uFlightCoord.value = pointOnSphereToUV(flightCoord.current);
     }
   });
 
@@ -102,71 +111,15 @@ function Earth() {
     countriesColorsMap
   ]);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      const flightCoordCopy = flightCoord.current.clone().normalize();
-      const geoms = [];
-      for (const point of points) {
-        const dist = point.p.distanceTo(flightCoordCopy);
-        if (dist < 0.4) {
-          geoms.push(point.bigGeom);
-        }
-        if (dist > 0.35 && dist < 0.8) {
-          geoms.push(point.smallGeom);
-        }
-      }
-      setPlanes(geoms);
-    }, 1000);
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  useEffect(() => {
-    const callbackId = requestIdleCallback(() => {
-      if (planes.length) {
-        let mergedGeoms = BufferGeometryUtils.mergeGeometries(planes);
-        setMergedGeometry(mergedGeoms);
-      }
-    });
-    return () => {
-      if (mergedGeometry?.dispose) mergedGeometry.dispose();
-      cancelIdleCallback(callbackId);
-    }
-  }, [planes]);
-
   return (
     <>
-      <mesh position={[0, 0, 0]} scale={2} geometry={mergedGeometry || undefined} material={earthMaterial} />
+      <mesh position={[0, 0, 0]} scale={2} material={earthMaterial}>
+        <boxGeometry args={[1,1,1, 901, 901, 901]} attach="geometry" />
+      </mesh>
       <mesh ref={flightRef} scale={0.01} position={flightCoord.current} >
         <sphereGeometry/>
         <meshBasicMaterial color="red" />
       </mesh>
-
-      {/* <mesh position={[0, 0, 0]}>
-        <icosahedronGeometry args={[1, 256]} />
-        <meshStandardMaterial
-          ref={mat}
-          flatShading
-          displacementMap={height}
-          displacementScale={0.2}
-          side={DoubleSide}
-          color="#b2f507"
-        />
-      </mesh>
-
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[1.054, 256, 256]} />
-        <shaderMaterial
-          ref={seaMaterial}
-          vertexShader={seaVertexShader}
-          fragmentShader={seaFragmentShader}
-          uniforms={{
-            uTime: {value: 0}
-          }}
-          transparent
-        />
-      </mesh> */}
     </>
   );
 }

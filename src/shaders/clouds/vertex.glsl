@@ -3,6 +3,7 @@ uniform float uTime;
 uniform vec2 uFlightCoord;
 
 varying float vCloudStrength;
+varying vec3 vNormal;
 
 float inverseLerp(float value, float minValue, float maxValue) {
     return (value - minValue) / (maxValue - minValue);
@@ -71,18 +72,23 @@ vec2 pointOnSphereToUV(vec3 p) {
 void main() {
     vec2 uv2 = pointOnSphereToUV(position);
     float dist = distance(uFlightCoord, uv2);
-    float isNear = step(0.005, dist);
+    float isNear = 1.0 - step(0.005, dist);
+
+    float distRuUa = distance(uv, vec2(0.85, 0.764));
+    float isNearRuUa = 1.0 - step(0.02, distRuUa);
 
     vec4 modelPosition = modelMatrix * vec4(position, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
 
-    float strength = step(0.06, cnoise(uv * 60.0 + uTime * 0.001) / 11.0);
+    float strength = step(0.06, cnoise(uv * 60.0 + uTime * 0.001) / 11.0 + isNearRuUa);
+
     vCloudStrength = strength;
+    vNormal = normal;
 
     gl_Position = projectedPosition;
 
-    gl_PointSize = 50.0 * mix(remap(dist, 0.0, 0.005, 0.0, 1.0), 1.0, isNear);
+    gl_PointSize = 50.0 * mix(1.0, remap(dist, 0.0, 0.005, 0.0, 1.0), isNear);
     gl_PointSize *= strength;
     gl_PointSize *= (1.0 / - viewPosition.z);
 }

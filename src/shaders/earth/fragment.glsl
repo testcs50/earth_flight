@@ -149,15 +149,20 @@ void main()
 
     // Make a current country brighter (in fact we are doing other countries darker)
     vec3 coordCountry = texture2D(countriesColorsMap, uFlightCoord).rgb;
+    vec3 ru = texture2D(countriesColorsMap, vec2(0.68, 0.83)).rgb;
+    vec3 ua = texture2D(countriesColorsMap, vec2(0.59, 0.78)).rgb;
     vec3 currentCountry = texture2D(countriesColorsMap, vUv).rgb;
-    float coordDistance = step(0.0000001, distance(coordCountry, currentCountry));
-    float colorMultiplier = mix(1.0, 0.2, coordDistance);
+    float isCurrentCountry = 1.0 - step(0.0000001, distance(coordCountry, currentCountry));
+    float isRu = 1.0 - step(0.0000001, distance(coordCountry, ru));
+    float isUa = 1.0 - step(0.0000001, distance(coordCountry, ua));
+    float needsSaturate = max(0.0, isCurrentCountry - isRu - isUa);
+    float colorMultiplier = mix(0.2, 1.0, needsSaturate);
     color *= colorMultiplier;
 
     // Make colors more saturated
     color = rgb2hsv(color);
     color.y = min(1.0, color.y + color.y * 0.7);
-    color.z = min(1.0, mix(color.z, color.z + 0.1, coordDistance));
+    color.z = min(1.0, mix(color.z + 0.1, color.z, needsSaturate));
     color = hsv2rgb(color);
     vec3 seaColor = vec3(0.0, 0.1, 0.9);
     float seaLevel = smoothstep(0.38, 0.5, vDispValue);
@@ -185,7 +190,7 @@ void main()
     vec3 hemi = mix(moonColor, sunColor, hemiMix);
 
     // Directional light
-    vec3 lightDir = normalize(vec3(sin(uTime * 0.05), 0.2, cos(uTime * 0.05))) * 3.5;
+    vec3 lightDir = normalize(vec3(sin(uTime * 0.05), 0.2, cos(uTime * 0.05))) * 1.5;
     vec3 lightColor = vec3(1.0, 1.0, 0.9);
     float dp = max(0.0, dot(lightDir, normal));
     vec3 diffuse = dp * lightColor;

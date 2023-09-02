@@ -1,4 +1,4 @@
-import { Vector3, TextureLoader, Vector2, Matrix4, Quaternion } from 'three';
+import { Vector3, TextureLoader, Vector2, Matrix4, Quaternion, AdditiveBlending } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { useLoader, useFrame } from "@react-three/fiber";
 import { useKeyboardControls } from '@react-three/drei';
@@ -25,8 +25,6 @@ function Earth() {
   const earthBWMap = useLoader(TextureLoader, './earthbw.png');
   const landDistanceMap = useLoader(TextureLoader, './land-distance.png');
   const countriesColorsMap = useLoader(TextureLoader, './countries-colored.png');
-
-  console.log(flightModel)
 
   const flightCoord = useRef(new Vector3(0, 0, 1).multiplyScalar(fh));
   const matrix = useRef(new Matrix4());
@@ -73,7 +71,7 @@ function Earth() {
 
   return (
     <>
-      <mesh position={[0, 0, 0]} scale={2} material={earthMaterial}>
+      <mesh position={[0, 0, 0]} scale={2} material={earthMaterial} receiveShadow>
         <boxGeometry args={[1, 1, 1, segs, segs, segs]} attach="geometry" />
         <shaderMaterial
           ref={earthMaterial}
@@ -95,11 +93,11 @@ function Earth() {
           }}
         />
       </mesh>
-      <group ref={flightRef} position={[0, 0, 0]}>
+      <group castShadow ref={flightRef} position={[0, 0, 0]}>
         <primitive object={flightModel.scene} position={[0, 0, 2.14]} scale={0.005} />
       </group>
       <points>
-        <icosahedronGeometry args={[fh, 200]} />
+        <icosahedronGeometry args={[fh, 150]} />
         <shaderMaterial
           ref={cloudsMaterial}
           vertexShader={cloudsVertex}

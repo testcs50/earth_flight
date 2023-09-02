@@ -151,12 +151,12 @@ void main()
     vec3 coordCountry = texture2D(countriesColorsMap, uFlightCoord).rgb;
     vec3 currentCountry = texture2D(countriesColorsMap, vUv).rgb;
     float coordDistance = step(0.0000001, distance(coordCountry, currentCountry));
-    float colorMultiplier = mix(0.9, 0.4, coordDistance);
+    float colorMultiplier = mix(1.0, 0.2, coordDistance);
     color *= colorMultiplier;
 
     // Make colors more saturated
     color = rgb2hsv(color);
-    color.y = min(0.9, color.y + color.y * 0.7);
+    color.y = min(1.0, color.y + color.y * 0.7);
     color.z = min(1.0, mix(color.z, color.z + 0.1, coordDistance));
     color = hsv2rgb(color);
     vec3 seaColor = vec3(0.0, 0.1, 0.9);
@@ -185,7 +185,7 @@ void main()
     vec3 hemi = mix(moonColor, sunColor, hemiMix);
 
     // Directional light
-    vec3 lightDir = normalize(vec3(sin(uTime * 0.0), 0.2, cos(uTime * 0.0))) * 3.0;
+    vec3 lightDir = normalize(vec3(sin(uTime * 0.05), 0.2, cos(uTime * 0.05))) * 3.5;
     vec3 lightColor = vec3(1.0, 1.0, 0.9);
     float dp = max(0.0, dot(lightDir, normal));
     vec3 diffuse = dp * lightColor;

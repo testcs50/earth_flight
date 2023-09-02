@@ -52,7 +52,7 @@ void main()
     
     float dispValue = 0.0;
     float texQua = 0.0;
-    float texStep = 0.00035;
+    float texStep = 0.00037;
     float blendSize = 1.0;
     for (float i = 0.0 - blendSize; i <= blendSize; i += 1.0) {
         for (float j = 0.0 - blendSize; j <= blendSize; j += 1.0) {

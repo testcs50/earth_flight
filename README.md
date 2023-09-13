@@ -1,8 +1,9 @@
-# React + Vite
+# Earth Flight
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is written using Three.js (react-three-fiber) and WebGL
 
-Currently, two official plugins are available:
+The idea is taken from Sebastian Lague's video:
+https://www.youtube.com/watch?v=sLqXFF8mlEU&t=173s&ab_channel=SebastianLague
+Textures are also taken from his github
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+[Demo](https://earth-flight.vercel.app/)

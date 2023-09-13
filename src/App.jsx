@@ -10,7 +10,7 @@ function App() {
   <Canvas flat>
     <color attach="background" args={[0.02, 0.02, 0.02]} />
 
-    <Perf position="top-left" />
+    {/* <Perf position="top-left" /> */}
 
     <OrbitControls makeDefault />
     <KeyboardControls
